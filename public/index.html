@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAVVY Finance Dashboard</title>
+    <!-- Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Auth Check -->
+    <script>
+        if (!localStorage.getItem('savvy_auth_token')) {
+            window.location.href = 'login.html';
+        }
+    </script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-icons">
+                <i class="fa-solid fa-house active" data-view="dashboard" title="Dashboard"></i>
+                <i class="fa-solid fa-list-ul" data-view="transactions" title="Transaction History"></i>
+                <i class="fa-solid fa-chart-pie" data-view="analytics" title="Analytics"></i>
+                <i class="fa-solid fa-gear" id="sidebar-settings-btn" title="Settings"></i>
+            </div>
+            <!-- Settings Popup -->
+            <div id="settings-popup" class="settings-popup hidden">
+                <button id="popup-account-btn"><i class="fa-solid fa-user"></i> Open my account</button>
+                <button id="logout-btn" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Navigation -->
+            <nav class="top-nav">
+                <a href="#" class="logo" data-view="dashboard" style="text-decoration: none; display: flex; align-items: center; gap: 8px;">
+                    <img src="logo.svg" alt="SAVVY" style="height: 28px; filter: drop-shadow(0 0 5px rgba(0,229,255,0.6));">
+                    <span>SAVVY</span>
+                </a>
+                <div class="nav-links">
+                    <a href="#" data-view="dashboard" class="active">Dashboard</a>
+                    <a href="#" data-view="transactions">Transactions</a>
+                    <a href="#" data-view="health">Budget Health</a>
+                    <a href="#" id="nav-budget-btn">Budgets</a>
+                </div>
+                <div class="nav-actions">
+                    <div class="search-bar" style="position: relative;">
+                        <i class="fa-solid fa-search"></i>
+                        <input type="text" id="global-search" placeholder="Search categories...">
+                        <div id="search-dropdown" class="search-dropdown hidden"></div>
+                    </div>
+                    <div class="user-profile" id="nav-account-btn" title="My Account" style="cursor: pointer;">
+                        <div class="avatar-circle"><i class="fa-solid fa-user"></i></div>
+                        <span>User</span>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Views Container -->
+            <div class="views-container">
+                
+                <!-- VIEW: Dashboard -->
+                <section id="view-dashboard" class="view active">
+                    <div class="dashboard-grid">
+                        <!-- Column 1: Inputs & Analytics -->
+                        <div class="grid-col col-1 fade-in">
+                            <div class="card expense-calculator">
+                                <h2>Expense Calculator</h2>
+                                <div class="timeframe-toggles">
+                                    <button class="active">Week</button>
+                                    <button>Month</button>
+                                    <button>Year</button>
+                                    <button>Custom</button>
+                                </div>
+                                <div class="input-group">
+                                    <label for="amount">Amount (₹)</label>
+                                    <input type="number" id="amount" placeholder="0.00" min="0">
+                                </div>
+                                <div class="input-group">
+                                    <label for="category">Category</label>
+                                    <select id="category">
+                                        <option value="Food & Dining">Food & Dining</option>
+                                        <option value="Transportation">Transportation</option>
+                                        <option value="Housing">Housing</option>
+                                        <option value="Entertainment">Entertainment</option>
+                                        <option value="Shopping">Shopping</option>
+                                        <option value="Bills & Utilities">Bills & Utilities</option>
+                                        <option value="Needs">Needs</option>
+                                        <option value="Wants">Wants</option>
+                                        <option value="Miscellaneous">Miscellaneous</option>
+                                    </select>
+                                </div>
+                                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                                    <button id="add-expense-btn" class="glow-btn" style="flex: 1;">Add Expense</button>
+                                    <button id="add-refund-btn" class="secondary-btn" style="flex: 1;">Add Amount</button>
+                                </div>
+                                
+                            </div>
+
+                            <div class="card burn-rate">
+                                <h2>Monthly Burn Rate</h2>
+                                <div class="gauge-container">
+                                    <svg viewBox="0 0 100 50" class="gauge">
+                                        <defs>
+                                            <linearGradient id="gauge-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                                <stop offset="0%" stop-color="#00E5FF" />
+                                                <stop offset="100%" stop-color="#B026FF" />
+                                            </linearGradient>
+                                        </defs>
+                                        <path class="gauge-bg" d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="8" stroke-linecap="round"/>
+                                        <path id="gauge-fill" d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="url(#gauge-grad)" stroke-width="8" stroke-linecap="round" stroke-dasharray="125.6" stroke-dashoffset="125.6"/>
+                                        <line id="gauge-needle" x1="50" y1="50" x2="15" y2="50" stroke="#fff" stroke-width="2" transform="rotate(0, 50, 50)" />
+                                        <circle cx="50" cy="50" r="4" fill="#fff"/>
+                                    </svg>
+                                    <div class="gauge-labels">
+                                        <span>0</span>
+                                        <span>Budget Limit</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Column 2: 3D Visualizer -->
+                        <div class="grid-col col-2 fade-in delay-1">
+                            <div class="card visualizer-card">
+                                <h2>Expenses by Category</h2>
+                                <div class="chart-container" style="height: 300px; position: relative; margin: auto; width: 100%;">
+                                    <canvas id="categoryChart"></canvas>
+                                </div>
+                                <div class="total-spent-card">
+                                    <span>TOTAL SPENT</span>
+                                    <h3 id="total-spent">₹0.00</h3>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Column 3: Savings -->
+                        <div class="grid-col col-3 fade-in delay-2" style="display: flex; flex-direction: column; gap: 20px;">
+                            <div class="card savings-ring-card">
+                                <h2>Savings-First Target</h2>
+                                <div class="ring-container">
+                                    <svg viewBox="0 0 100 100" class="progress-ring">
+                                        <defs>
+                                            <filter id="glow">
+                                                <feGaussianBlur stdDeviation="3.5" result="coloredBlur"/>
+                                                <feMerge>
+                                                    <feMergeNode in="coloredBlur"/>
+                                                    <feMergeNode in="SourceGraphic"/>
+                                                </feMerge>
+                                            </filter>
+                                        </defs>
+                                        <circle class="ring-bg" cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="8"/>
+                                        <circle id="ring-fill" cx="50" cy="50" r="40" fill="none" stroke="#00E676" stroke-width="8" stroke-dasharray="251.2" stroke-dashoffset="251.2" transform="rotate(-90 50 50)" filter="url(#glow)"/>
+                                    </svg>
+                                    <div class="ring-text">
+                                        <span id="savings-amount">₹0</span>
+                                        <span class="target-label" id="target-label-text">/ ₹0</span>
+                                    </div>
+                                </div>
+                                <p class="remaining-text">Remaining to hit goal: <span id="remaining-amount">₹0</span></p>
+                            </div>
+                            
+                            <div class="card recent-activity-card" style="flex: 1;">
+                                <h2>Recent Activity</h2>
+                                <div class="recent-list" id="recent-list">
+                                    <!-- Populated by JS -->
+                                    <p style="color: #8E9BAE; font-size: 14px; text-align: center; margin-top: 20px;">No recent activity.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW: Transactions -->
+                <section id="view-transactions" class="view hidden fade-in">
+                    <div class="card full-width-card">
+                        <h2>Transaction History</h2>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date & Time</th>
+                                        <th>Title</th>
+                                        <th>Amount</th>
+                                        <th>Category</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transactions-tbody">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW: Analytics -->
+                <section id="view-analytics" class="view hidden fade-in">
+                    <div class="card full-width-card" style="height: calc(100vh - 120px);">
+                        <h2>Expenses & Savings Trend</h2>
+                        <div class="chart-container" style="height: 90%;">
+                            <canvas id="trendChart"></canvas>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW: Account -->
+                <section id="view-account" class="view hidden fade-in">
+                    <div class="card account-card">
+                        <h2>My Profile</h2>
+                        <div class="account-details">
+                            <p><strong>Name:</strong> <span id="acc-name"></span></p>
+                            <p><strong>Email:</strong> <span id="acc-email"></span></p>
+                            <p><strong>Registered Date:</strong> <span id="acc-date"></span></p>
+                            <p><strong>Monthly Budget:</strong> <span id="acc-budget">₹0</span></p>
+                            <p><strong>Target Savings:</strong> <span id="acc-savings">₹0</span></p>
+                        </div>
+                        <div class="account-actions">
+                            <button id="generate-telegram-btn" class="glow-btn outline" style="margin-bottom: 15px; border-color: #26A69A; color: #26A69A;">Link Telegram Bot</button>
+                            <div id="telegram-token-display" style="display: none; margin-bottom: 15px; padding: 10px; background: rgba(38, 166, 154, 0.1); border-radius: 8px; border: 1px dashed #26A69A; color: #69F0AE; text-align: center; font-weight: bold; font-family: monospace;"></div>
+                            
+                            <button id="goto-analytics-btn" class="glow-btn">View Analytics</button>
+                            <button id="delete-account-btn" class="danger-btn">Delete Account</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+            <section id="view-health" class="view hidden fade-in">
+                <header class="dashboard-header">
+                    <h1 class="glow-text">Budget Health Calculator</h1>
+                </header>
+                <div class="card" style="margin-top: 20px;">
+                    <div class="health-legend" style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 30px; font-size: 14px; color: var(--text-muted);">
+                        <div style="display:flex; align-items:center; gap: 8px;"><span style="width: 16px; height: 16px; background: #448AFF; display: inline-block;"></span> Savings</div>
+                        <div style="display:flex; align-items:center; gap: 8px;"><span style="width: 16px; height: 16px; background: #69F0AE; display: inline-block;"></span> Emergency Fund</div>
+                        <div style="display:flex; align-items:center; gap: 8px;"><span style="width: 16px; height: 16px; background: #FFCA28; display: inline-block;"></span> Fixed Needs</div>
+                        <div style="display:flex; align-items:center; gap: 8px;"><span style="width: 16px; height: 16px; background: #FF5252; display: inline-block;"></span> Buffer</div>
+                        <div style="display:flex; align-items:center; gap: 8px;"><span style="width: 16px; height: 16px; background: #B388FF; display: inline-block;"></span> Safe-to-Spend</div>
+                        <div style="display:flex; align-items:center; gap: 8px;"><span style="width: 16px; height: 16px; background: #FF8A65; display: inline-block;"></span> Deficit (Over budget)</div>
+                    </div>
+                    
+                    <div style="position: relative; height: 250px; width: 100%;">
+                        <canvas id="healthChart"></canvas>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-around; margin-top: 30px; margin-bottom: 40px; text-align: center;">
+                        <div>
+                            <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Max Safe-to-Spend</span>
+                            <h3 id="health-safe-to-spend" style="font-size: 24px; color: #fff; margin-top: 5px;">₹0</h3>
+                        </div>
+                        <div style="width: 1px; background: rgba(255,255,255,0.1);"></div>
+                        <div>
+                            <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Budget Grade</span>
+                            <h3 id="health-budget-grade" style="font-size: 24px; color: #fff; margin-top: 5px;">A (Excellent)</h3>
+                        </div>
+                    </div>
+
+                    <div class="health-inputs">
+                        <div class="input-group flex-row">
+                            <label style="flex: 1;">Total Monthly Income</label>
+                            <input type="range" id="health-income-range" min="0" max="500000" step="1000" style="flex: 2; margin: 0 15px;">
+                            <input type="number" id="health-income-input" style="flex: 1; max-width: 100px;">
+                        </div>
+                        <div class="input-group flex-row">
+                            <label style="flex: 1;">Target Savings</label>
+                            <input type="number" id="health-savings-input" style="flex: 3; margin-left: 15px;">
+                        </div>
+                        <div class="input-group flex-row">
+                            <label style="flex: 1;">Emergency Fund Target</label>
+                            <input type="number" id="health-emergency-input" style="flex: 3; margin-left: 15px;">
+                        </div>
+                        <div class="input-group flex-row">
+                            <label style="flex: 1;">Fixed Needs (Rent/Bills)</label>
+                            <input type="number" id="health-fixed-input" style="flex: 3; margin-left: 15px;">
+                        </div>
+                        <div class="input-group flex-row">
+                            <label style="flex: 1;">Misc Safety Buffer %</label>
+                            <input type="range" id="health-buffer-range" min="0" max="100" step="1" style="flex: 2; margin: 0 15px;">
+                            <input type="number" id="health-buffer-input" style="flex: 1; max-width: 100px;">
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Budget Modal -->
+    <div id="budget-modal" class="modal-overlay hidden">
+        <div class="modal-content card">
+            <h2>Set Your Goals</h2>
+            <p style="color: #8E9BAE; margin-bottom: 20px; font-size: 14px;">Define your monthly budget limit and how much you want to save.</p>
+            <div class="input-group">
+                <label>Monthly Income (₹)</label>
+                <input type="number" id="budget-input" placeholder="e.g. 50000">
+            </div>
+            <div class="input-group">
+                <label>Target Savings (₹)</label>
+                <input type="number" id="savings-target-input" placeholder="e.g. 20000">
+            </div>
+            <div class="input-group">
+                <label>Emergency Fund Target (₹)</label>
+                <input type="number" id="emergency-target-input" placeholder="e.g. 10000">
+            </div>
+            <div class="input-group">
+                <label>Fixed Needs (Rent/Bills) (₹)</label>
+                <input type="number" id="fixed-needs-input" placeholder="e.g. 15000">
+            </div>
+            <div class="input-group">
+                <label>Misc Safety Buffer (%)</label>
+                <input type="number" id="misc-buffer-input" placeholder="e.g. 5">
+            </div>
+            <div class="modal-actions">
+                <button id="save-budget-btn" class="glow-btn">Save</button>
+                <button id="close-budget-btn" class="secondary-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+
+    <script type="module" src="chart-config.js"></script>
+    <script type="module" src="app.js"></script>
+    <script type="module" src="auth.js"></script>
+</body>
+</html>

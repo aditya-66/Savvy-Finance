@@ -1,0 +1,11 @@
+node_modules/
+.env
+.DS_Store
+Thumbs.db
+npm-debug.log*
+
+fix-db.js
+test-db.js
+test-endpoint.js
+run-migration.js
+sql_queries.md
