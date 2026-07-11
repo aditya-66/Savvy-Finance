@@ -98,7 +98,7 @@ Savvy allows you to log transactions without opening the app!
 
 ## Screenshots
 
-<img src="newUI.png" alt="savvy-dashboard" width="800">
+<img src="NewUI.png" alt="savvy-dashboard" width="800">
 
 ## 🤝 Contributing
 
