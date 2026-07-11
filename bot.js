@@ -11,22 +11,82 @@ if (token) {
 
     console.log('Telegram Bot is running...');
 
-    const categoryMapping = {
-        'chai': 'Food & Dining',
-        'tea': 'Food & Dining',
-        'namkeen': 'Food & Dining',
-        'sweets': 'Food & Dining',
-        'food': 'Food & Dining',
-        'samosa': 'Food & Dining',
-        'toffee': 'Food & Dining',
-        'coffee': 'Food & Dining',
-        'snacks': 'Food & Dining',
-        'drink': 'Food & Dining',
-        'petrol': 'Transportation',
-        'uber': 'Transportation',
-        'electricity': 'Bills & Utilities',
-        'rent': 'Housing',
-        'movie': 'Entertainment'
+    const categoryKeywords = {
+        'Food & Dining': [
+            'tea', 'chai', 'coffee', 'food', 'lunch', 'dinner', 'breakfast', 'snack', 'snacks',
+            'pizza', 'burger', 'sandwich', 'noodles', 'noodle', 'maggi', 'momos', 'momo',
+            'samosa', 'pani puri', 'golgappa', 'chaat', 'biryani', 'rice', 'roti', 'dal',
+            'paratha', 'dosa', 'idli', 'vada', 'pav bhaji', 'chole', 'paneer',
+            'chicken', 'mutton', 'fish', 'egg', 'omelette', 'thali',
+            'cake', 'pastry', 'chocolate', 'ice cream', 'icecream', 'kulfi', 'sweet', 'mithai',
+            'biscuit', 'cookies', 'chips', 'namkeen', 'bhujia',
+            'juice', 'lassi', 'milkshake', 'shake', 'smoothie', 'cold drink', 'soda', 'pepsi', 'coke', 'sprite',
+            'water', 'milk', 'curd', 'butter', 'ghee', 'oil', 'sugar', 'salt', 'flour', 'atta',
+            'fruit', 'fruits', 'apple', 'banana', 'mango', 'grapes', 'orange', 'papaya',
+            'vegetable', 'vegetables', 'sabzi', 'onion', 'potato', 'tomato',
+            'swiggy', 'zomato', 'restaurant', 'cafe', 'dhaba', 'canteen', 'mess', 'tiffin',
+            'grocery', 'groceries', 'kirana', 'provision', 'ration',
+            'bread', 'jam', 'sauce', 'ketchup', 'mayo', 'cheese', 'paneer',
+            'toffee', 'candy', 'gum', 'mints', 'lollipop',
+            'wine', 'beer', 'alcohol', 'liquor', 'drink', 'drinks',
+            'popcorn', 'peanut', 'peanuts', 'dry fruits', 'cashew', 'almond', 'raisin'
+        ],
+        'Transportation': [
+            'uber', 'ola', 'auto', 'rickshaw', 'taxi', 'cab', 'bus', 'metro', 'train', 'railway',
+            'flight', 'airplane', 'airport', 'petrol', 'diesel', 'fuel', 'gas', 'cng',
+            'parking', 'toll', 'fastag', 'car wash', 'servicing', 'repair',
+            'bike', 'scooter', 'cycle', 'vehicle', 'car', 'travel', 'trip', 'commute',
+            'rapido', 'indriver', 'fare', 'ticket', 'pass'
+        ],
+        'Housing': [
+            'rent', 'emi', 'mortgage', 'home loan', 'house', 'flat', 'apartment',
+            'maintenance', 'society', 'property', 'broker', 'brokerage',
+            'plumber', 'electrician', 'carpenter', 'painter', 'pest control',
+            'furniture', 'sofa', 'bed', 'table', 'chair', 'mattress', 'pillow', 'curtain',
+            'ac repair', 'fridge', 'washing machine', 'geyser', 'cooler'
+        ],
+        'Entertainment': [
+            'movie', 'movies', 'cinema', 'pvr', 'inox', 'theatre', 'theater',
+            'netflix', 'hotstar', 'prime', 'spotify', 'youtube', 'subscription',
+            'game', 'games', 'gaming', 'ps5', 'xbox', 'steam', 'pubg',
+            'concert', 'show', 'event', 'party', 'club', 'bar', 'pub',
+            'outing', 'picnic', 'trip', 'vacation', 'holiday', 'park', 'museum', 'zoo'
+        ],
+        'Shopping': [
+            'amazon', 'flipkart', 'myntra', 'meesho', 'ajio', 'nykaa',
+            'clothes', 'clothing', 'shirt', 'tshirt', 't-shirt', 'jeans', 'pant', 'shorts',
+            'shoes', 'sneakers', 'sandals', 'chappal', 'slipper',
+            'watch', 'bag', 'backpack', 'wallet', 'purse', 'belt',
+            'phone', 'mobile', 'laptop', 'tablet', 'earphones', 'headphones', 'charger', 'cable',
+            'accessories', 'jewellery', 'jewelry', 'ring', 'chain', 'bracelet',
+            'cosmetics', 'makeup', 'perfume', 'deodorant', 'sunscreen', 'cream',
+            'gift', 'present', 'shopping'
+        ],
+        'Bills & Utilities': [
+            'electricity', 'electric', 'bijli', 'power', 'light bill',
+            'water bill', 'gas bill', 'internet', 'wifi', 'broadband', 'airtel', 'jio', 'vi', 'bsnl',
+            'recharge', 'mobile bill', 'phone bill', 'postpaid', 'prepaid',
+            'dth', 'tata sky', 'dish tv', 'cable', 'insurance', 'premium',
+            'tax', 'gst', 'income tax', 'laundry', 'dry clean', 'ironing'
+        ],
+        'Needs': [
+            'medicine', 'medical', 'doctor', 'hospital', 'clinic', 'pharmacy', 'chemist',
+            'health', 'checkup', 'test', 'lab', 'blood test', 'xray',
+            'soap', 'shampoo', 'toothpaste', 'brush', 'razor', 'sanitary',
+            'tissue', 'detergent', 'surf', 'cleaner', 'mop', 'broom',
+            'school', 'college', 'tuition', 'fees', 'book', 'books', 'stationery', 'pen', 'notebook',
+            'gym', 'fitness', 'yoga', 'protein', 'supplement'
+        ],
+        'Wants': [
+            'luxury', 'premium', 'designer', 'branded',
+            'spa', 'salon', 'haircut', 'facial', 'massage', 'parlour', 'parlor',
+            'tattoo', 'piercing', 'hobby', 'art', 'craft', 'music', 'instrument',
+            'gadget', 'drone', 'camera', 'gopro', 'smartwatch'
+        ],
+        'Add Money': [
+            'add money', 'salary', 'income', 'refund', 'cashback', 'received', 'credited',
+            'bonus', 'freelance', 'payment received', 'pocket money', 'allowance', 'stipend'
+        ]
     };
 
     bot.onText(/\/start/, (msg) => {
@@ -116,11 +176,15 @@ if (token) {
                 amount = -amount; // Negative amount signifies Income in this database schema
                 category = 'Add Money';
             } else {
-                for (const [key, val] of Object.entries(categoryMapping)) {
-                    if (keyword.includes(key)) {
-                        category = val;
-                        break;
+                for (const [cat, keywords] of Object.entries(categoryKeywords)) {
+                    for (const kw of keywords) {
+                        const regex = new RegExp(`\\b${kw}\\b`, 'i');
+                        if (regex.test(keyword)) {
+                            category = cat;
+                            break;
+                        }
                     }
+                    if (category !== 'Miscellaneous') break;
                 }
             }
             
