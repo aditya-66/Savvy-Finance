@@ -1,7 +1,7 @@
 <div align="center">
   <img src="https://raw.githubusercontent.com/github/explore/80688e429a7d4ef2fca1e82350fe8e3517d3494d/topics/javascript/javascript.png" width="100" height="100" alt="JavaScript Logo" />
   
-  # 🚀 SAVVY Finance Dashboard
+  # 🚀 SAVVY - Automated Finance Manager
 
   **Your ultimate personal finance command center, built with modern web technologies.**
   
