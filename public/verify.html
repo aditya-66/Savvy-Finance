@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAVVY - Verify Email</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .otp-inputs {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .otp-input {
+            width: 45px;
+            height: 55px;
+            font-size: 24px;
+            text-align: center;
+            background: rgba(14, 22, 36, 0.6);
+            border: 1px solid rgba(142, 155, 174, 0.3);
+            border-radius: 8px;
+            color: #fff;
+            transition: all 0.3s;
+        }
+        .otp-input:focus {
+            border-color: #00E5FF;
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
+            outline: none;
+        }
+    </style>
+</head>
+<body class="auth-body">
+    <div class="auth-container fade-in">
+        <a href="index.html" class="auth-logo-wrapper" style="text-decoration: none;">
+            <img src="logo.svg" alt="SAVVY" style="height: 40px; filter: drop-shadow(0 0 10px rgba(0,229,255,0.6));">
+            <h1>SAVVY</h1>
+        </a>
+        
+        <div class="auth-wrapper">
+            <i class="fa-solid fa-shield-halved floating-icon float-1"></i>
+            <i class="fa-solid fa-envelope floating-icon float-3"></i>
+
+            <div class="auth-card">
+                <h2>VERIFY EMAIL</h2>
+                <p class="auth-subtitle">We sent a 6-digit code to <br><b id="display-email">your email</b>.</p>
+                <form id="verify-form" class="auth-form">
+                    <div class="otp-inputs" id="otp-container">
+                        <input type="text" class="otp-input" maxlength="1" required autocomplete="off">
+                        <input type="text" class="otp-input" maxlength="1" required autocomplete="off">
+                        <input type="text" class="otp-input" maxlength="1" required autocomplete="off">
+                        <input type="text" class="otp-input" maxlength="1" required autocomplete="off">
+                        <input type="text" class="otp-input" maxlength="1" required autocomplete="off">
+                        <input type="text" class="otp-input" maxlength="1" required autocomplete="off">
+                    </div>
+                    <button type="submit" class="auth-submit-btn">
+                        <i class="fa-solid fa-check-circle"></i> VERIFY
+                    </button>
+                </form>
+                <p class="auth-footer" style="margin-top: 20px;">
+                    Didn't receive the code? <a href="#" id="resend-otp">Resend OTP</a>
+                </p>
+                <p class="auth-footer"><a href="login.html">Back to Login</a></p>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="auth.js"></script>
+</body>
+</html>

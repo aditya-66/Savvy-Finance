@@ -13,6 +13,9 @@ if (token) {
 
     const categoryMapping = {
         'chai': 'Food & Dining',
+        'tea': 'Food & Dining',
+        'namkeen': 'Food & Dining',
+        'sweets': 'Food & Dining',
         'food': 'Food & Dining',
         'samosa': 'Food & Dining',
         'toffee': 'Food & Dining',
@@ -33,7 +36,7 @@ if (token) {
 
     bot.onText(/\/link (.+)/, async (msg, match) => {
         const chatId = msg.chat.id;
-        const linkingToken = match[1];
+        const linkingToken = match[1].trim().substring(0, 50);
 
         try {
             const [users] = await db.query('SELECT id, name FROM users WHERE linking_token = ?', [linkingToken]);
@@ -99,10 +102,10 @@ if (token) {
 
             const isIncome = !!match[1];
             let amount = parseFloat(match[2]);
-            const keyword = match[3].trim().toLowerCase();
+            const keyword = match[3].trim().substring(0, 100).toLowerCase();
             
-            if (amount <= 0) {
-                bot.sendMessage(msg.chat.id, "Amount must be a positive number.");
+            if (!isFinite(amount) || amount <= 0 || amount > 99999999) {
+                bot.sendMessage(msg.chat.id, "Amount must be a positive, finite number and less than 100,000,000.");
                 return;
             }
 
@@ -121,6 +124,17 @@ if (token) {
                 }
             }
             
+            // Prevent duplicate entries (e.g., from multiple instances/zombie processes)
+            const [recent] = await db.query(
+                'SELECT id FROM transactions WHERE user_id = ? AND title = ? AND amount = ? AND date > DATE_SUB(NOW(), INTERVAL 10 SECOND)',
+                [userId, keyword, amount]
+            );
+
+            if (recent.length > 0) {
+                console.log('Duplicate transaction from Telegram ignored.');
+                return;
+            }
+
             await db.query(
                 'INSERT INTO transactions (user_id, title, amount, category) VALUES (?, ?, ?, ?)',
                 [userId, keyword, amount, category]
@@ -129,7 +143,7 @@ if (token) {
             if (isIncome) {
                 bot.sendMessage(msg.chat.id, `✅ Added ₹${Math.abs(amount)} as Income (${keyword}).`);
             } else {
-                bot.sendMessage(msg.chat.id, `✅ ₹${amount} saved under ${category}.`);
+                bot.sendMessage(msg.chat.id, `✅ ₹${amount} spent under ${category}.`);
             }
 
         } catch (err) {

@@ -1,11 +1,24 @@
 node_modules/
 .env
+.env.*
+!.env.example
 .DS_Store
 Thumbs.db
 npm-debug.log*
 
+# Test and Debug Scripts
+check_fk.js
 fix-db.js
 test-db.js
 test-endpoint.js
 run-migration.js
+fix.py
+migrate_otp.js
+remove_dups.js
+seed_test.js
+test_browser.js
+test_delete.js
+test_flow.js
+test_ui.js
+update_db.js
 sql_queries.md

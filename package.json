@@ -18,6 +18,8 @@
     "helmet": "^8.2.0",
     "jsonwebtoken": "^9.0.3",
     "mysql2": "^3.22.6",
-    "node-telegram-bot-api": "^1.1.2"
+    "node-telegram-bot-api": "^1.1.2",
+    "nodemailer": "^9.0.3",
+    "puppeteer": "^25.3.0"
   }
 }

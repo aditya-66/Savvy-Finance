@@ -49,12 +49,14 @@ const generalApiLimiter = rateLimit({
 // Apply strict rate limiter to Auth routes
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
+app.use('/api/auth/verify-otp', authLimiter);
+app.use('/api/auth/resend-otp', authLimiter);
 
 // Apply general rate limiter to all API routes
 app.use('/api/', generalApiLimiter);
 
 app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:3000' }));
-app.use(express.json());
+app.use(express.json({ limit: '10kb' }));
 
 // API Routes
 app.use('/api/auth', authRoutes);

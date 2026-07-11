@@ -1,4 +1,4 @@
-import { updateCategoryChart, updateChart, updateBudgetHealthChart } from './chart-config.js';
+import { updateCategoryChart, updateChart, updateBudgetHealthChart, resizeCharts } from './chart-config.js';
 
 // Auth Check
 const token = localStorage.getItem('savvy_auth_token');
@@ -39,6 +39,98 @@ const state = {
     allTransactions: [] // including soft deleted
 };
 
+// --- Auto-Categorization Map ---
+const categoryKeywords = {
+    'Food & Dining': [
+        'tea', 'chai', 'coffee', 'food', 'lunch', 'dinner', 'breakfast', 'snack', 'snacks',
+        'pizza', 'burger', 'sandwich', 'noodles', 'noodle', 'maggi', 'momos', 'momo',
+        'samosa', 'pani puri', 'golgappa', 'chaat', 'biryani', 'rice', 'roti', 'dal',
+        'paratha', 'dosa', 'idli', 'vada', 'pav bhaji', 'chole', 'paneer',
+        'chicken', 'mutton', 'fish', 'egg', 'omelette', 'thali',
+        'cake', 'pastry', 'chocolate', 'ice cream', 'icecream', 'kulfi', 'sweet', 'mithai',
+        'biscuit', 'cookies', 'chips', 'namkeen', 'bhujia',
+        'juice', 'lassi', 'milkshake', 'shake', 'smoothie', 'cold drink', 'soda', 'pepsi', 'coke', 'sprite',
+        'water', 'milk', 'curd', 'butter', 'ghee', 'oil', 'sugar', 'salt', 'flour', 'atta',
+        'fruit', 'fruits', 'apple', 'banana', 'mango', 'grapes', 'orange', 'papaya',
+        'vegetable', 'vegetables', 'sabzi', 'onion', 'potato', 'tomato',
+        'swiggy', 'zomato', 'restaurant', 'cafe', 'dhaba', 'canteen', 'mess', 'tiffin',
+        'grocery', 'groceries', 'kirana', 'provision', 'ration',
+        'bread', 'jam', 'sauce', 'ketchup', 'mayo', 'cheese', 'paneer',
+        'toffee', 'candy', 'gum', 'mints', 'lollipop',
+        'wine', 'beer', 'alcohol', 'liquor', 'drink', 'drinks',
+        'popcorn', 'peanut', 'peanuts', 'dry fruits', 'cashew', 'almond', 'raisin'
+    ],
+    'Transportation': [
+        'uber', 'ola', 'auto', 'rickshaw', 'taxi', 'cab', 'bus', 'metro', 'train', 'railway',
+        'flight', 'airplane', 'airport', 'petrol', 'diesel', 'fuel', 'gas', 'cng',
+        'parking', 'toll', 'fastag', 'car wash', 'servicing', 'repair',
+        'bike', 'scooter', 'cycle', 'vehicle', 'car', 'travel', 'trip', 'commute',
+        'rapido', 'indriver', 'fare', 'ticket', 'pass'
+    ],
+    'Housing': [
+        'rent', 'emi', 'mortgage', 'home loan', 'house', 'flat', 'apartment',
+        'maintenance', 'society', 'property', 'broker', 'brokerage',
+        'plumber', 'electrician', 'carpenter', 'painter', 'pest control',
+        'furniture', 'sofa', 'bed', 'table', 'chair', 'mattress', 'pillow', 'curtain',
+        'ac repair', 'fridge', 'washing machine', 'geyser', 'cooler'
+    ],
+    'Entertainment': [
+        'movie', 'movies', 'cinema', 'pvr', 'inox', 'theatre', 'theater',
+        'netflix', 'hotstar', 'prime', 'spotify', 'youtube', 'subscription',
+        'game', 'games', 'gaming', 'ps5', 'xbox', 'steam', 'pubg',
+        'concert', 'show', 'event', 'party', 'club', 'bar', 'pub',
+        'outing', 'picnic', 'trip', 'vacation', 'holiday', 'park', 'museum', 'zoo'
+    ],
+    'Shopping': [
+        'amazon', 'flipkart', 'myntra', 'meesho', 'ajio', 'nykaa',
+        'clothes', 'clothing', 'shirt', 'tshirt', 't-shirt', 'jeans', 'pant', 'shorts',
+        'shoes', 'sneakers', 'sandals', 'chappal', 'slipper',
+        'watch', 'bag', 'backpack', 'wallet', 'purse', 'belt',
+        'phone', 'mobile', 'laptop', 'tablet', 'earphones', 'headphones', 'charger', 'cable',
+        'accessories', 'jewellery', 'jewelry', 'ring', 'chain', 'bracelet',
+        'cosmetics', 'makeup', 'perfume', 'deodorant', 'sunscreen', 'cream',
+        'gift', 'present', 'shopping'
+    ],
+    'Bills & Utilities': [
+        'electricity', 'electric', 'bijli', 'power', 'light bill',
+        'water bill', 'gas bill', 'internet', 'wifi', 'broadband', 'airtel', 'jio', 'vi', 'bsnl',
+        'recharge', 'mobile bill', 'phone bill', 'postpaid', 'prepaid',
+        'dth', 'tata sky', 'dish tv', 'cable', 'insurance', 'premium',
+        'tax', 'gst', 'income tax', 'laundry', 'dry clean', 'ironing'
+    ],
+    'Needs': [
+        'medicine', 'medical', 'doctor', 'hospital', 'clinic', 'pharmacy', 'chemist',
+        'health', 'checkup', 'test', 'lab', 'blood test', 'xray',
+        'soap', 'shampoo', 'toothpaste', 'brush', 'razor', 'sanitary',
+        'tissue', 'detergent', 'surf', 'cleaner', 'mop', 'broom',
+        'school', 'college', 'tuition', 'fees', 'book', 'books', 'stationery', 'pen', 'notebook',
+        'gym', 'fitness', 'yoga', 'protein', 'supplement'
+    ],
+    'Wants': [
+        'luxury', 'premium', 'designer', 'branded',
+        'spa', 'salon', 'haircut', 'facial', 'massage', 'parlour', 'parlor',
+        'tattoo', 'piercing', 'hobby', 'art', 'craft', 'music', 'instrument',
+        'gadget', 'drone', 'camera', 'gopro', 'smartwatch'
+    ],
+    'Add Money': [
+        'add money', 'salary', 'income', 'refund', 'cashback', 'received', 'credited',
+        'bonus', 'freelance', 'payment received', 'pocket money', 'allowance', 'stipend'
+    ]
+};
+
+function detectCategory(title) {
+    if (!title) return null;
+    const lower = title.toLowerCase().trim();
+    for (const [category, keywords] of Object.entries(categoryKeywords)) {
+        for (const kw of keywords) {
+            if (lower === kw || lower.includes(kw)) {
+                return category;
+            }
+        }
+    }
+    return null;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     
     // --- 1. Routing Logic ---
@@ -54,7 +146,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             else link.classList.remove('active');
         });
         
+        // Force chart resize now that container is visible
+        setTimeout(() => resizeCharts(), 10);
+        
         if (viewId === 'transactions') loadAllTransactions();
+        if (viewId === 'trash') loadAllTransactions();
         if (viewId === 'health') initBudgetHealth();
     }
 
@@ -104,6 +200,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('emergency-target-input').value = state.emergencyFund || '';
         document.getElementById('fixed-needs-input').value = state.fixedNeeds || '';
         document.getElementById('misc-buffer-input').value = state.bufferPct || '';
+        
+        const checkboxes = document.querySelectorAll('#discretionary-checkboxes input[type="checkbox"]');
+        const cats = state.discretionaryCategories || [];
+        checkboxes.forEach(cb => cb.checked = cats.includes(cb.value));
+        
         budgetModal.classList.remove('hidden');
     });
     document.getElementById('close-budget-btn').addEventListener('click', () => {
@@ -121,6 +222,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 state.emergencyFund = parseFloat(user.emergency_fund_target) || 0;
                 state.fixedNeeds = parseFloat(user.fixed_needs) || 0;
                 state.bufferPct = parseInt(user.misc_buffer_pct, 10) || 0;
+                
+                try {
+                    state.discretionaryCategories = user.discretionary_categories ? JSON.parse(user.discretionary_categories) : ['Wants', 'Entertainment', 'Shopping', 'Food & Dining', 'Miscellaneous', 'Needs'];
+                } catch(e) {
+                    state.discretionaryCategories = ['Wants', 'Entertainment', 'Shopping', 'Food & Dining', 'Miscellaneous', 'Needs'];
+                }
+
                 state.dailyLimit = state.income; // simplified limit to monthly budget for now
                 
                 document.getElementById('acc-name').innerText = user.name;
@@ -149,25 +257,35 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (response.ok) {
                 state.allTransactions = await response.json();
                 renderTransactionsTable();
+                if (typeof renderTrashTable === 'function') renderTrashTable();
             }
         } catch (err) { console.error(err); }
     }
 
     function calculateTotals() {
         state.categoryTotals = {};
-        state.dailySpent = 0;
+        state.discretionarySpent = 0;
+        let expenses = 0;
+        let actualIncome = 0;
         
         state.transactions.forEach(t => {
             const amt = parseFloat(t.amount);
             const isIncome = amt < 0 || (t.category && t.category.toLowerCase() === 'add money');
-            if (!isIncome) {
+            
+            if (isIncome) {
+                actualIncome += Math.abs(amt);
+            } else {
                 const cat = t.category || 'Miscellaneous';
                 state.categoryTotals[cat] = (state.categoryTotals[cat] || 0) + amt;
+                expenses += amt;
+                if (state.discretionaryCategories && state.discretionaryCategories.includes(cat)) {
+                    state.discretionarySpent += amt;
+                }
             }
-            state.dailySpent += amt;
         });
         
-        state.savingsTotal = state.income - state.dailySpent;
+        state.dailySpent = expenses;
+        state.savingsTotal = actualIncome - expenses;
         updateUI();
     }
 
@@ -179,11 +297,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         const fixed_needs = parseFloat(document.getElementById('fixed-needs-input').value) || 0;
         const misc_buffer = parseInt(document.getElementById('misc-buffer-input').value, 10) || 0;
         
+        const checkboxes = document.querySelectorAll('#discretionary-checkboxes input[type="checkbox"]:checked');
+        const discretionary_categories = Array.from(checkboxes).map(cb => cb.value);
+        
         try {
             const res = await fetch('/api/auth/budget', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ budget, savings, emergency_fund, fixed_needs, misc_buffer })
+                body: JSON.stringify({ budget, savings, emergency_fund, fixed_needs, misc_buffer, discretionary_categories })
             });
             if (res.ok) {
                 budgetModal.classList.add('hidden');
@@ -225,7 +346,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             safe = 0;
         }
 
+        const spent = state.discretionarySpent || 0;
+        let remaining = safe - spent;
+        if (remaining < 0) remaining = 0;
+
         document.getElementById('health-safe-to-spend').innerText = `₹${safe.toFixed(2)}`;
+        document.getElementById('health-safe-spent').innerText = `₹${spent.toFixed(2)}`;
+        document.getElementById('health-safe-remaining').innerText = `₹${remaining.toFixed(2)}`;
 
         const savingsRate = income > 0 ? (savings / income) * 100 : 0;
         let grade = "C (Warning)";
@@ -332,7 +459,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         state.expensesHistory[state.expensesHistory.length - 1] = state.dailySpent;
         state.savingsHistory[state.savingsHistory.length - 1] = state.savingsTotal;
-        updateChart(state.expensesHistory, state.savingsHistory, state.income);
+
         
         // Render Recent Activity
         const recentList = document.getElementById('recent-list');
@@ -359,12 +486,179 @@ document.addEventListener('DOMContentLoaded', async () => {
                 recentList.appendChild(item);
             });
         }
+        
+        if (typeof calculateDurationSummary === 'function') {
+            calculateDurationSummary();
+        }
+        if (typeof calculateAnalyticsSummary === 'function') {
+            calculateAnalyticsSummary();
+        }
+        
+        renderBudgetHealth();
+    }
+
+    function calculateDurationSummary() {
+        const activeBtn = document.querySelector('.duration-toggles button.active');
+        if (!activeBtn) return;
+        const durationType = activeBtn.dataset.duration;
+
+        let startDate = new Date();
+        let endDate = new Date();
+        startDate.setHours(0,0,0,0);
+        endDate.setHours(23,59,59,999);
+
+        if (durationType === 'daily') {
+            // Keep today
+        } else if (durationType === 'weekly') {
+            const day = startDate.getDay();
+            const diff = startDate.getDate() - day + (day === 0 ? -6 : 1);
+            startDate.setDate(diff);
+        } else if (durationType === 'monthly') {
+            startDate.setDate(1);
+        } else if (durationType === 'custom') {
+            const startVal = document.getElementById('duration-start').value;
+            const endVal = document.getElementById('duration-end').value;
+            if (startVal && endVal) {
+                startDate = new Date(startVal);
+                startDate.setHours(0,0,0,0);
+                endDate = new Date(endVal);
+                endDate.setHours(23,59,59,999);
+            }
+        }
+
+        let totalExp = 0;
+        let totalInc = 0;
+        const filteredTxs = [];
+
+        state.transactions.forEach(t => {
+            const tDate = new Date(t.date);
+            if (tDate >= startDate && tDate <= endDate) {
+                filteredTxs.push(t);
+                const amt = parseFloat(t.amount);
+                const isIncome = amt < 0 || (t.category && t.category.toLowerCase() === 'add money');
+                if (isIncome) {
+                    totalInc += Math.abs(amt);
+                } else {
+                    totalExp += amt;
+                }
+            }
+        });
+
+        document.getElementById('duration-expenses-total').innerText = `₹${totalExp.toFixed(2)}`;
+        document.getElementById('duration-income-total').innerText = `₹${totalInc.toFixed(2)}`;
+        
+        let labels = [];
+        let expData = [];
+        let incData = [];
+        let savData = [];
+
+        if (durationType === 'daily') {
+            labels = Array.from({length: 24}, (_, i) => `${i}:00`);
+            expData = Array(24).fill(0);
+            incData = Array(24).fill(0);
+            filteredTxs.forEach(t => {
+                const hour = new Date(t.date).getHours();
+                const amt = parseFloat(t.amount);
+                const isIncome = amt < 0 || (t.category && t.category.toLowerCase() === 'add money');
+                if (isIncome) incData[hour] += Math.abs(amt);
+                else expData[hour] += amt;
+            });
+            savData = incData.map((inc, i) => inc - expData[i]);
+        } else if (durationType === 'weekly') {
+            labels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            expData = Array(7).fill(0);
+            incData = Array(7).fill(0);
+            filteredTxs.forEach(t => {
+                const day = new Date(t.date).getDay();
+                const amt = parseFloat(t.amount);
+                const isIncome = amt < 0 || (t.category && t.category.toLowerCase() === 'add money');
+                if (isIncome) incData[day] += Math.abs(amt);
+                else expData[day] += amt;
+            });
+            savData = incData.map((inc, i) => inc - expData[i]);
+        } else if (durationType === 'monthly') {
+            const daysInMonth = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0).getDate();
+            labels = Array.from({length: daysInMonth}, (_, i) => `${i + 1}`);
+            expData = Array(daysInMonth).fill(0);
+            incData = Array(daysInMonth).fill(0);
+            filteredTxs.forEach(t => {
+                const date = new Date(t.date).getDate() - 1;
+                const amt = parseFloat(t.amount);
+                const isIncome = amt < 0 || (t.category && t.category.toLowerCase() === 'add money');
+                if (isIncome) incData[date] += Math.abs(amt);
+                else expData[date] += amt;
+            });
+            savData = incData.map((inc, i) => inc - expData[i]);
+        } else if (durationType === 'custom') {
+            const diffTime = Math.abs(endDate - startDate);
+            let numDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            if (numDays === 0) numDays = 1;
+            
+            labels = Array.from({length: numDays}, (_, i) => {
+                const d = new Date(startDate);
+                d.setDate(d.getDate() + i);
+                return `${d.getDate()}/${d.getMonth()+1}`;
+            });
+            expData = Array(numDays).fill(0);
+            incData = Array(numDays).fill(0);
+            filteredTxs.forEach(t => {
+                const tDate = new Date(t.date);
+                tDate.setHours(0,0,0,0);
+                const start = new Date(startDate);
+                start.setHours(0,0,0,0);
+                const dayIdx = Math.floor((tDate - start) / (1000 * 60 * 60 * 24));
+                if (dayIdx >= 0 && dayIdx < numDays) {
+                    const amt = parseFloat(t.amount);
+                    const isIncome = amt < 0 || (t.category && t.category.toLowerCase() === 'add money');
+                    if (isIncome) incData[dayIdx] += Math.abs(amt);
+                    else expData[dayIdx] += amt;
+                }
+            });
+            savData = incData.map((inc, i) => inc - expData[i]);
+        }
+        
+
+        
+        renderDurationTable(filteredTxs);
+    }
+
+    function renderDurationTable(txs) {
+        const tbody = document.getElementById('duration-transactions-tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        if (txs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #8E9BAE; padding: 20px;">No transactions in this period.</td></tr>';
+            return;
+        }
+        
+        // Sort transactions by date descending
+        const sortedTxs = [...txs].sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        sortedTxs.forEach(t => {
+            const tr = document.createElement('tr');
+            const dateStr = new Date(t.date).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            
+            const amt = parseFloat(t.amount);
+            const isIncome = amt < 0 || (t.category && t.category.toLowerCase() === 'add money');
+            const displayAmt = Math.abs(amt).toFixed(2);
+            const displaySign = isIncome ? '+' : '';
+            const color = isIncome ? '#00E676' : 'var(--text-main)';
+
+            tr.innerHTML = `
+                <td>${dateStr}</td>
+                <td>${escapeHTML(t.title)}</td>
+                <td style="color: ${color}">${displaySign}₹${displayAmt}</td>
+                <td>${escapeHTML(t.category)}</td>
+            `;
+            tbody.appendChild(tr);
+        });
     }
 
     function renderTransactionsTable() {
         const tbody = document.getElementById('transactions-tbody');
         tbody.innerHTML = '';
-        state.allTransactions.forEach(t => {
+        const activeTxs = state.allTransactions.filter(t => !t.is_deleted);
+        activeTxs.forEach(t => {
             const tr = document.createElement('tr');
             const dateStr = new Date(t.date).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
             
@@ -379,9 +673,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td>${escapeHTML(t.title)}</td>
                 <td style="color: ${color}">${displaySign}₹${displayAmt}</td>
                 <td>${escapeHTML(t.category)}</td>
-                <td><span style="color: ${t.is_deleted ? '#ff3366' : '#00E676'}">${t.is_deleted ? 'Deleted' : 'Active'}</span></td>
+                <td><span style="color: #00E676">Active</span></td>
                 <td>
-                    ${!t.is_deleted ? `<button class="action-btn delete" data-id="${t.id}" title="Delete"><i class="fa-solid fa-trash"></i></button>` : `<button class="action-btn restore" data-id="${t.id}" title="Restore"><i class="fa-solid fa-rotate-left"></i></button>`}
+                    <button class="action-btn delete" data-id="${t.id}" title="Delete"><i class="fa-solid fa-trash"></i></button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -396,6 +690,51 @@ document.addEventListener('DOMContentLoaded', async () => {
                 await loadActiveTransactions();
             });
         });
+    }
+
+    function renderTrashTable(searchQuery = '') {
+        const tbody = document.getElementById('trash-tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        let deletedTxs = state.allTransactions.filter(t => t.is_deleted);
+        
+        if (searchQuery) {
+            const query = searchQuery.toLowerCase().trim();
+            deletedTxs = deletedTxs.filter(t => 
+                (t.category && t.category.toLowerCase().includes(query)) ||
+                (t.title && t.title.toLowerCase().includes(query))
+            );
+        }
+        
+        if (deletedTxs.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #8E9BAE; padding: 20px;">No deleted transactions found.</td></tr>`;
+            return;
+        }
+
+        deletedTxs.forEach(t => {
+            const tr = document.createElement('tr');
+            const dateStr = new Date(t.date).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            
+            const amt = parseFloat(t.amount);
+            const isIncome = amt < 0 || (t.category && t.category.toLowerCase() === 'add money');
+            const displayAmt = Math.abs(amt).toFixed(2);
+            const displaySign = isIncome ? '+' : '';
+            const color = isIncome ? '#00E676' : 'var(--text-main)';
+
+            tr.innerHTML = `
+                <td>${dateStr}</td>
+                <td style="text-decoration: line-through; color: #8E9BAE;">${escapeHTML(t.title)}</td>
+                <td style="color: ${color}">${displaySign}₹${displayAmt}</td>
+                <td>${escapeHTML(t.category)}</td>
+                <td><span style="color: #ff3366">Deleted</span></td>
+                <td>
+                    <button class="action-btn restore" data-id="${t.id}" title="Restore"><i class="fa-solid fa-rotate-left"></i></button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        // Bind events
         document.querySelectorAll('.action-btn.restore').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const id = e.currentTarget.getAttribute('data-id');
@@ -406,8 +745,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    const trashSearchInput = document.getElementById('trash-search');
+    if (trashSearchInput) {
+        trashSearchInput.addEventListener('input', (e) => {
+            renderTrashTable(e.target.value);
+        });
+    }
+
     // --- 6. Expense Handlers ---
-    async function handleAddExpense(amount, category, isRefund = false) {
+    async function handleAddExpense(amount, category, isRefund = false, title = '') {
         if (!amount || isNaN(amount) || amount === 0) {
             alert('Please enter a valid amount.');
             return;
@@ -418,14 +764,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         
         const finalAmount = isRefund ? -Math.abs(amount) : Math.abs(amount);
-        const title = isRefund ? 'Income / Refund' : 'Expense';
+        const finalTitle = title.trim() || (isRefund ? 'Income / Refund' : 'Expense');
         
         try {
             const formattedCategory = category.charAt(0).toUpperCase() + category.slice(1);
             const response = await fetch('/api/transactions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ title, amount: finalAmount, category: formattedCategory })
+                body: JSON.stringify({ title: finalTitle, amount: finalAmount, category: formattedCategory })
             });
             if (response.ok) {
                 await loadActiveTransactions();
@@ -441,6 +787,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     function processTransaction(isRefund) {
         let amt = parseFloat(document.getElementById('amount').value);
         const cat = document.getElementById('category').value;
+        const titleInput = document.getElementById('expense-title');
+        const title = titleInput ? titleInput.value : '';
         
         const activeTimeframeBtn = document.querySelector('.timeframe-toggles button.active');
         if (activeTimeframeBtn) {
@@ -449,12 +797,25 @@ document.addEventListener('DOMContentLoaded', async () => {
             else if (timeframe === 'year') amt /= 12; 
         }
         
-        handleAddExpense(amt, cat, isRefund);
+        handleAddExpense(amt, cat, isRefund, title);
         document.getElementById('amount').value = '';
+        if (titleInput) titleInput.value = '';
     }
 
     if(addBtn) addBtn.addEventListener('click', () => processTransaction(false));
     if(refundBtn) refundBtn.addEventListener('click', () => processTransaction(true));
+
+    // Auto-categorize when user types an item name
+    const expenseTitleInput = document.getElementById('expense-title');
+    const categorySelect = document.getElementById('category');
+    if (expenseTitleInput && categorySelect) {
+        expenseTitleInput.addEventListener('input', () => {
+            const detected = detectCategory(expenseTitleInput.value);
+            if (detected) {
+                categorySelect.value = detected;
+            }
+        });
+    }
 
     const quickAddInput = document.getElementById('quick-add-input');
     if(quickAddInput) {
@@ -483,7 +844,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const searchInput = document.getElementById('global-search');
     const searchDropdown = document.getElementById('search-dropdown');
     
-    searchInput.addEventListener('input', async (e) => {
+    function debounce(func, wait) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+
+    searchInput.addEventListener('input', debounce(async (e) => {
         const query = e.target.value.toLowerCase().trim();
         if (!query) {
             searchDropdown.classList.add('hidden');
@@ -502,8 +871,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const matches = state.allTransactions.filter(t => 
-            (t.category && t.category.toLowerCase().includes(query)) ||
-            (t.title && t.title.toLowerCase().includes(query))
+            !t.is_deleted && (
+                (t.category && t.category.toLowerCase().includes(query)) ||
+                (t.title && t.title.toLowerCase().includes(query))
+            )
         );
 
         searchDropdown.innerHTML = '';
@@ -530,7 +901,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
         searchDropdown.classList.remove('hidden');
-    });
+    }, 300));
 
     document.addEventListener('click', (e) => {
         if (searchInput && searchDropdown && !searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
@@ -543,6 +914,188 @@ document.addEventListener('DOMContentLoaded', async () => {
             searchDropdown.classList.remove('hidden');
         }
     });
+
+    // Duration Summary Listeners
+    const durationBtns = document.querySelectorAll('.duration-toggles button');
+    const customDateRow = document.querySelector('.custom-duration-row');
+    durationBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            durationBtns.forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            if (e.target.dataset.duration === 'custom') {
+                customDateRow.style.display = 'flex';
+            } else {
+                customDateRow.style.display = 'none';
+                calculateDurationSummary();
+            }
+        });
+    });
+
+    document.getElementById('calculate-duration-btn')?.addEventListener('click', () => {
+        calculateDurationSummary();
+    });
+
+    // Analytics Chart Listeners
+    const analyticsBtns = document.querySelectorAll('.analytics-toggles button');
+    const customAnalyticsRow = document.querySelector('.custom-analytics-row');
+    analyticsBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            analyticsBtns.forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            if (e.target.dataset.duration === 'custom') {
+                customAnalyticsRow.style.display = 'flex';
+            } else {
+                customAnalyticsRow.style.display = 'none';
+                calculateAnalyticsSummary();
+            }
+        });
+    });
+
+    document.getElementById('calculate-analytics-btn')?.addEventListener('click', () => {
+        calculateAnalyticsSummary();
+    });
+
+    function calculateAnalyticsSummary() {
+        const activeBtn = document.querySelector('.analytics-toggles button.active');
+        if (!activeBtn) return;
+        const durationType = activeBtn.dataset.duration;
+
+        let startDate = new Date();
+        let endDate = new Date();
+        startDate.setHours(0,0,0,0);
+        endDate.setHours(23,59,59,999);
+
+        if (durationType === 'daily') {
+            // Keep today
+        } else if (durationType === 'weekly') {
+            const day = startDate.getDay();
+            const diff = startDate.getDate() - day + (day === 0 ? -6 : 1);
+            startDate.setDate(diff);
+        } else if (durationType === 'monthly') {
+            startDate.setDate(1);
+        } else if (durationType === 'custom') {
+            const startVal = document.getElementById('analytics-start').value;
+            const endVal = document.getElementById('analytics-end').value;
+            if (startVal && endVal) {
+                startDate = new Date(startVal);
+                startDate.setHours(0,0,0,0);
+                endDate = new Date(endVal);
+                endDate.setHours(23,59,59,999);
+            }
+        }
+
+        let labels = [];
+        let expData = [];
+        let incData = [];
+        let savData = [];
+
+        if (durationType === 'daily') {
+            labels = Array.from({length: 24}, (_, i) => `${i}:00`);
+            expData = Array(24).fill(0);
+            incData = Array(24).fill(0);
+            state.transactions.forEach(t => {
+                const tDate = new Date(t.date);
+                if (tDate >= startDate && tDate <= endDate) {
+                    const hour = tDate.getHours();
+                    const amt = parseFloat(t.amount);
+                    const isIncome = amt < 0 || (t.category && t.category.toLowerCase() === 'add money');
+                    if (isIncome) incData[hour] += Math.abs(amt);
+                    else expData[hour] += amt;
+                }
+            });
+            savData = incData.map((inc, i) => inc - expData[i]);
+        } else if (durationType === 'weekly') {
+            labels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            expData = Array(7).fill(0);
+            incData = Array(7).fill(0);
+            state.transactions.forEach(t => {
+                const tDate = new Date(t.date);
+                if (tDate >= startDate && tDate <= endDate) {
+                    const day = tDate.getDay();
+                    const amt = parseFloat(t.amount);
+                    const isIncome = amt < 0 || (t.category && t.category.toLowerCase() === 'add money');
+                    if (isIncome) incData[day] += Math.abs(amt);
+                    else expData[day] += amt;
+                }
+            });
+            savData = incData.map((inc, i) => inc - expData[i]);
+        } else if (durationType === 'monthly') {
+            const daysInMonth = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0).getDate();
+            labels = Array.from({length: daysInMonth}, (_, i) => `${i + 1}`);
+            expData = Array(daysInMonth).fill(0);
+            incData = Array(daysInMonth).fill(0);
+            state.transactions.forEach(t => {
+                const tDate = new Date(t.date);
+                if (tDate >= startDate && tDate <= endDate) {
+                    const date = tDate.getDate() - 1;
+                    const amt = parseFloat(t.amount);
+                    const isIncome = amt < 0 || (t.category && t.category.toLowerCase() === 'add money');
+                    if (isIncome) incData[date] += Math.abs(amt);
+                    else expData[date] += amt;
+                }
+            });
+            savData = incData.map((inc, i) => inc - expData[i]);
+        } else if (durationType === 'custom') {
+            const diffTime = Math.abs(endDate - startDate);
+            let numDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            if (numDays === 0) numDays = 1;
+            
+            labels = Array.from({length: numDays}, (_, i) => {
+                const d = new Date(startDate);
+                d.setDate(d.getDate() + i);
+                return `${d.getDate()}/${d.getMonth()+1}`;
+            });
+            expData = Array(numDays).fill(0);
+            incData = Array(numDays).fill(0);
+            state.transactions.forEach(t => {
+                const tDate = new Date(t.date);
+                if (tDate >= startDate && tDate <= endDate) {
+                    tDate.setHours(0,0,0,0);
+                    const start = new Date(startDate);
+                    start.setHours(0,0,0,0);
+                    const dayIdx = Math.floor((tDate - start) / (1000 * 60 * 60 * 24));
+                    if (dayIdx >= 0 && dayIdx < numDays) {
+                        const amt = parseFloat(t.amount);
+                        const isIncome = amt < 0 || (t.category && t.category.toLowerCase() === 'add money');
+                        if (isIncome) incData[dayIdx] += Math.abs(amt);
+                        else expData[dayIdx] += amt;
+                    }
+                }
+            });
+            savData = incData.map((inc, i) => inc - expData[i]);
+        }
+        
+        const filteredLabels = [];
+        const filteredExp = [];
+        const filteredInc = [];
+        const filteredSav = [];
+        
+        for (let i = 0; i < labels.length; i++) {
+            if (expData[i] !== 0 || incData[i] !== 0) {
+                filteredLabels.push(labels[i]);
+                filteredExp.push(expData[i]);
+                filteredInc.push(incData[i]);
+                filteredSav.push(savData[i]);
+            }
+        }
+
+        // Pad right side with empty values if there are few transactions, so they align to the left
+        if (filteredLabels.length > 0 && filteredLabels.length < 8) {
+            const padCount = 8 - filteredLabels.length;
+            for(let i=0; i < padCount; i++) {
+                filteredLabels.push('');
+                filteredExp.push(0);
+                filteredInc.push(0);
+                filteredSav.push(0);
+            }
+        }
+
+        if (filteredLabels.length > 0) {
+            updateChart(filteredLabels, filteredExp, filteredSav, filteredInc);
+        } else {
+            updateChart(labels, expData, savData, incData);
+        }
+    }
 
     // Boot
     await loadProfile();

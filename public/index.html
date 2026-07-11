@@ -8,11 +8,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=2">
     
 
     <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- Auth Check -->
     <script>
@@ -29,6 +29,7 @@
                 <i class="fa-solid fa-house active" data-view="dashboard" title="Dashboard"></i>
                 <i class="fa-solid fa-list-ul" data-view="transactions" title="Transaction History"></i>
                 <i class="fa-solid fa-chart-pie" data-view="analytics" title="Analytics"></i>
+                <i class="fa-solid fa-trash-can" data-view="trash" title="Trash"></i>
                 <i class="fa-solid fa-gear" id="sidebar-settings-btn" title="Settings"></i>
             </div>
             <!-- Settings Popup -->
@@ -50,6 +51,7 @@
                     <a href="#" data-view="dashboard" class="active">Dashboard</a>
                     <a href="#" data-view="transactions">Transactions</a>
                     <a href="#" data-view="health">Budget Health</a>
+                    <a href="#" data-view="trash">Trash</a>
                     <a href="#" id="nav-budget-btn">Budgets</a>
                 </div>
                 <div class="nav-actions">
@@ -80,6 +82,10 @@
                                     <button>Month</button>
                                     <button>Year</button>
                                     <button>Custom</button>
+                                </div>
+                                <div class="input-group">
+                                    <label for="expense-title">Item Name</label>
+                                    <input type="text" id="expense-title" placeholder="e.g. tea, uber, netflix..." autocomplete="off">
                                 </div>
                                 <div class="input-group">
                                     <label for="amount">Amount (₹)</label>
@@ -178,6 +184,55 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Duration Summary -->
+                    <div class="card full-width-card duration-summary-card fade-in" style="margin-top: 20px;">
+                        <div class="duration-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                            <h2>Duration Summary</h2>
+                            <div class="timeframe-toggles duration-toggles">
+                                <button data-duration="daily" class="active">Daily</button>
+                                <button data-duration="weekly">Weekly</button>
+                                <button data-duration="monthly">Monthly</button>
+                                <button data-duration="custom">Custom</button>
+                            </div>
+                        </div>
+                        <div class="custom-duration-row hidden" style="display: none; align-items: flex-end; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; background: rgba(0,0,0,0.1); padding: 15px; border-radius: 8px;">
+                            <div class="input-group" style="margin: 0;">
+                                <label style="font-size: 12px;">Start Date</label>
+                                <input type="date" id="duration-start" style="padding: 8px;">
+                            </div>
+                            <div class="input-group" style="margin: 0;">
+                                <label style="font-size: 12px;">End Date</label>
+                                <input type="date" id="duration-end" style="padding: 8px;">
+                            </div>
+                            <button id="calculate-duration-btn" class="glow-btn" style="padding: 8px 15px;">Calculate</button>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; text-align: center;">
+                            <div style="background: rgba(255, 82, 82, 0.05); padding: 20px; border-radius: 12px; border: 1px solid rgba(255, 82, 82, 0.1);">
+                                <span style="font-size: 12px; color: #8E9BAE;">Total Expenses</span>
+                                <h3 id="duration-expenses-total" style="font-size: 28px; color: #FF8A65; margin-top: 5px;">₹0.00</h3>
+                            </div>
+                            <div style="background: rgba(0, 230, 118, 0.05); padding: 20px; border-radius: 12px; border: 1px solid rgba(0, 230, 118, 0.1);">
+                                <span style="font-size: 12px; color: #8E9BAE;">Total Added Money</span>
+                                <h3 id="duration-income-total" style="font-size: 28px; color: #69F0AE; margin-top: 5px;">₹0.00</h3>
+                            </div>
+                        </div>
+                        
+                        <div class="table-container" style="margin-top: 25px; max-height: 400px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; background: rgba(0,0,0,0.2);">
+                            <table class="data-table" style="margin-bottom: 0;">
+                                <thead style="position: sticky; top: 0; background: #141822; z-index: 10; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+                                    <tr>
+                                        <th>Date & Time</th>
+                                        <th>Title</th>
+                                        <th>Amount</th>
+                                        <th>Category</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="duration-transactions-tbody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </section>
 
                 <!-- VIEW: Transactions -->
@@ -204,11 +259,54 @@
                     </div>
                 </section>
 
+                <!-- VIEW: Trash -->
+                <section id="view-trash" class="view hidden fade-in">
+                    <div class="card full-width-card">
+                        <h2>Deleted Transactions (Trash)</h2>
+                        <p style="color: #8E9BAE; font-size: 14px; margin-bottom: 20px;">Items here are excluded from your dashboard metrics. You can restore them if needed.</p>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date & Time</th>
+                                        <th>Title</th>
+                                        <th>Amount</th>
+                                        <th>Category</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="trash-tbody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- VIEW: Analytics -->
                 <section id="view-analytics" class="view hidden fade-in">
-                    <div class="card full-width-card" style="height: calc(100vh - 120px);">
-                        <h2>Expenses & Savings Trend</h2>
-                        <div class="chart-container" style="height: 90%;">
+                    <div class="card full-width-card" style="height: calc(100vh - 120px); display: flex; flex-direction: column;">
+                        <div class="analytics-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                            <h2>Expenses & Savings Trend</h2>
+                            <div class="timeframe-toggles analytics-toggles">
+                                <button data-duration="daily" class="active">Daily</button>
+                                <button data-duration="weekly">Weekly</button>
+                                <button data-duration="monthly">Monthly</button>
+                                <button data-duration="custom">Custom</button>
+                            </div>
+                        </div>
+                        <div class="custom-analytics-row hidden" style="display: none; align-items: flex-end; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; background: rgba(0,0,0,0.1); padding: 15px; border-radius: 8px;">
+                            <div class="input-group" style="margin: 0;">
+                                <label style="font-size: 12px;">Start Date</label>
+                                <input type="date" id="analytics-start" style="padding: 8px;">
+                            </div>
+                            <div class="input-group" style="margin: 0;">
+                                <label style="font-size: 12px;">End Date</label>
+                                <input type="date" id="analytics-end" style="padding: 8px;">
+                            </div>
+                            <button id="calculate-analytics-btn" class="glow-btn" style="padding: 8px 15px;">Calculate</button>
+                        </div>
+                        <div class="chart-container" style="flex: 1; min-height: 0;">
                             <canvas id="trendChart"></canvas>
                         </div>
                     </div>
@@ -216,21 +314,60 @@
 
                 <!-- VIEW: Account -->
                 <section id="view-account" class="view hidden fade-in">
-                    <div class="card account-card">
-                        <h2>My Profile</h2>
-                        <div class="account-details">
-                            <p><strong>Name:</strong> <span id="acc-name"></span></p>
-                            <p><strong>Email:</strong> <span id="acc-email"></span></p>
-                            <p><strong>Registered Date:</strong> <span id="acc-date"></span></p>
-                            <p><strong>Monthly Budget:</strong> <span id="acc-budget">₹0</span></p>
-                            <p><strong>Target Savings:</strong> <span id="acc-savings">₹0</span></p>
+                    <div class="profile-container" style="max-width: 800px; margin: 0 auto; padding-top: 20px;">
+                        <div class="card profile-header-card" style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px; background: linear-gradient(to right, var(--card-bg), rgba(68, 138, 255, 0.05)); border-left: 4px solid #448AFF;">
+                            <div class="profile-avatar" style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #448AFF, #00E5FF); display: flex; align-items: center; justify-content: center; font-size: 36px; color: #fff; box-shadow: 0 4px 15px rgba(0, 229, 255, 0.3);">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                            <div class="profile-info-header">
+                                <h2 id="acc-name" style="margin: 0; font-size: 28px; color: #fff;">User Name</h2>
+                                <p id="acc-email" style="margin: 5px 0 0; color: #8E9BAE; font-size: 16px;">user@example.com</p>
+                                <span style="display: inline-block; margin-top: 8px; padding: 4px 12px; background: rgba(105, 240, 174, 0.1); color: #69F0AE; border-radius: 12px; font-size: 12px; font-weight: bold;"><i class="fa-solid fa-circle-check" style="margin-right:4px;"></i> Active Member</span>
+                            </div>
                         </div>
-                        <div class="account-actions">
-                            <button id="generate-telegram-btn" class="glow-btn outline" style="margin-bottom: 15px; border-color: #26A69A; color: #26A69A;">Link Telegram Bot</button>
-                            <div id="telegram-token-display" style="display: none; margin-bottom: 15px; padding: 10px; background: rgba(38, 166, 154, 0.1); border-radius: 8px; border: 1px dashed #26A69A; color: #69F0AE; text-align: center; font-weight: bold; font-family: monospace;"></div>
-                            
-                            <button id="goto-analytics-btn" class="glow-btn">View Analytics</button>
-                            <button id="delete-account-btn" class="danger-btn">Delete Account</button>
+
+                        <div class="profile-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                            <div class="card profile-details-card">
+                                <h3 style="margin-bottom: 15px; font-size: 18px; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px;">Account Details</h3>
+                                <ul class="profile-list" style="list-style: none; padding: 0; margin: 0;">
+                                    <li style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+                                        <span style="color: #8E9BAE;"><i class="fa-regular fa-calendar-days" style="margin-right: 8px; width: 16px;"></i> Joined</span>
+                                        <span id="acc-date" style="color: #fff; font-weight: 500;"></span>
+                                    </li>
+                                    <li style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+                                        <span style="color: #8E9BAE;"><i class="fa-solid fa-wallet" style="margin-right: 8px; width: 16px;"></i> Monthly Budget</span>
+                                        <span id="acc-budget" style="color: #fff; font-weight: 500;">₹0</span>
+                                    </li>
+                                    <li style="display: flex; justify-content: space-between;">
+                                        <span style="color: #8E9BAE;"><i class="fa-solid fa-bullseye" style="margin-right: 8px; width: 16px;"></i> Target Savings</span>
+                                        <span id="acc-savings" style="color: #fff; font-weight: 500;">₹0</span>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="card profile-actions-card">
+                                <h3 style="margin-bottom: 15px; font-size: 18px; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px;">Quick Actions</h3>
+                                <div class="action-buttons" style="display: flex; flex-direction: column; gap: 12px;">
+                                    <button id="generate-telegram-btn" class="glow-btn outline" style="width: 100%; justify-content: center; border-color: #26A69A; color: #26A69A; display: flex; align-items: center; gap: 8px;">
+                                        <i class="fa-brands fa-telegram"></i> Link Telegram Bot
+                                    </button>
+                                    <div id="telegram-token-display" style="display: none; padding: 10px; background: rgba(38, 166, 154, 0.1); border-radius: 8px; border: 1px dashed #26A69A; color: #69F0AE; text-align: center; font-weight: bold; font-family: monospace;"></div>
+                                    
+                                    <button id="goto-analytics-btn" class="glow-btn" style="width: 100%; justify-content: center; display: flex; align-items: center; gap: 8px; background: linear-gradient(90deg, #448AFF, #1565C0);">
+                                        <i class="fa-solid fa-chart-line"></i> View Analytics
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card profile-danger-card" style="border: 1px solid rgba(255, 82, 82, 0.2); background: rgba(255, 82, 82, 0.02); display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h3 style="color: #FF5252; margin-bottom: 5px;"><i class="fa-solid fa-shield-halved" style="margin-right: 8px;"></i>Danger Zone</h3>
+                                <p style="color: #8E9BAE; font-size: 14px; margin: 0;">Once you delete your account, there is no going back.</p>
+                            </div>
+                            <button id="delete-account-btn" class="danger-btn" style="background: rgba(255, 82, 82, 0.1); border: 1px solid #FF5252; color: #FF5252; border-radius: 8px; padding: 10px 20px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">
+                                Delete Account
+                            </button>
                         </div>
                     </div>
                 </section>
@@ -257,6 +394,10 @@
                         <div>
                             <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Max Safe-to-Spend</span>
                             <h3 id="health-safe-to-spend" style="font-size: 24px; color: #fff; margin-top: 5px;">₹0</h3>
+                            <div style="font-size: 13px; margin-top: 5px; color: #8E9BAE;">
+                                <span style="color: #FF5252;">Spent: <span id="health-safe-spent">₹0</span></span> | 
+                                <span style="color: #69F0AE;">Remaining: <span id="health-safe-remaining">₹0</span></span>
+                            </div>
                         </div>
                         <div style="width: 1px; background: rgba(255,255,255,0.1);"></div>
                         <div>
@@ -319,7 +460,23 @@
                 <label>Misc Safety Buffer (%)</label>
                 <input type="number" id="misc-buffer-input" placeholder="e.g. 5">
             </div>
-            <div class="modal-actions">
+            
+            <div class="input-group" style="margin-top: 15px;">
+                <label style="margin-bottom: 10px; display: block; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px;">Discretionary Categories (Safe-to-Spend Tracker)</label>
+                <div id="discretionary-checkboxes" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px; color: #8E9BAE;">
+                    <label><input type="checkbox" value="Food & Dining"> Food & Dining</label>
+                    <label><input type="checkbox" value="Transportation"> Transportation</label>
+                    <label><input type="checkbox" value="Housing"> Housing</label>
+                    <label><input type="checkbox" value="Entertainment"> Entertainment</label>
+                    <label><input type="checkbox" value="Shopping"> Shopping</label>
+                    <label><input type="checkbox" value="Bills & Utilities"> Bills & Utilities</label>
+                    <label><input type="checkbox" value="Needs"> Needs</label>
+                    <label><input type="checkbox" value="Wants"> Wants</label>
+                    <label><input type="checkbox" value="Miscellaneous"> Miscellaneous</label>
+                </div>
+            </div>
+            
+            <div class="modal-actions" style="margin-top: 20px;">
                 <button id="save-budget-btn" class="glow-btn">Save</button>
                 <button id="close-budget-btn" class="secondary-btn">Cancel</button>
             </div>

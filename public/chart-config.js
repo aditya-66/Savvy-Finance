@@ -1,15 +1,11 @@
 let myChart;
 
-export function updateChart(expensesData, savingsData, income) {
+export function updateChart(labels, expensesData, savingsData, incomeData) {
     const ctx = document.getElementById('trendChart');
     if (!ctx) return;
 
-    const labels = Array.from({length: 31}, (_, i) => i + 1);
-    
-    // Income is a flat line for visualization, or just dots
-    const incomeData = Array(31).fill(income / 31); // daily income average
-
     if (myChart) {
+        myChart.data.labels = labels;
         myChart.data.datasets[0].data = incomeData;
         myChart.data.datasets[1].data = expensesData;
         myChart.data.datasets[2].data = savingsData;
@@ -21,43 +17,39 @@ export function updateChart(expensesData, savingsData, income) {
     Chart.defaults.font.family = "'Inter', sans-serif";
 
     myChart = new Chart(ctx, {
-        type: 'line',
+        type: 'bar',
         data: {
             labels: labels,
             datasets: [
                 {
-                    label: 'Daily Income Avg',
+                    type: 'line',
+                    label: 'Income',
                     data: incomeData,
                     borderColor: '#00E5FF',
                     borderWidth: 2,
                     borderDash: [5, 5],
-                    pointRadius: 0,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#00E5FF',
                     fill: false,
                     tension: 0.4
                 },
                 {
+                    type: 'bar',
                     label: 'Expenses',
                     data: expensesData,
                     borderColor: '#B026FF',
-                    backgroundColor: 'rgba(176,38,255,0.1)',
-                    borderWidth: 2,
-                    pointBackgroundColor: '#B026FF',
-                    pointBorderColor: '#fff',
-                    pointRadius: 3,
-                    fill: true,
-                    tension: 0.4
+                    backgroundColor: 'rgba(176,38,255,0.7)',
+                    borderWidth: 1,
+                    borderRadius: 4
                 },
                 {
-                    label: 'Cumulative Savings',
+                    type: 'bar',
+                    label: 'Savings',
                     data: savingsData,
                     borderColor: '#00E676',
-                    backgroundColor: 'rgba(0,230,118,0.1)',
-                    borderWidth: 2,
-                    pointBackgroundColor: '#00E676',
-                    pointBorderColor: '#fff',
-                    pointRadius: 3,
-                    fill: true,
-                    tension: 0.4
+                    backgroundColor: 'rgba(0,230,118,0.7)',
+                    borderWidth: 1,
+                    borderRadius: 4
                 }
             ]
         },
@@ -116,10 +108,17 @@ export function updateCategoryChart(categoriesMap) {
     const noData = dataValues.length === 0 || dataValues.reduce((a, b) => a + b, 0) === 0;
 
     const baseColors = [
-        '#FF5252', '#FF4081', '#E040FB', '#7C4DFF', 
-        '#536DFE', '#448AFF', '#40C4FF', '#18FFFF', 
-        '#64FFDA', '#69F0AE', '#B2FF59', '#EEFF41', 
-        '#FFFF00', '#FFD740', '#FFAB40', '#FF6E40'
+        '#FF3366', // Vibrant Pink/Red
+        '#A3CB38', // Lime Green (was Bright Cyan, swapped with Housing)
+        '#FFD32A', // Sunny Yellow
+        '#5F27CD', // Deep Purple
+        '#05C46B', // Vibrant Green
+        '#FDA7DF', // Soft Lavender (Replaced Orange)
+        '#FF9F43', // Vibrant Orange (Replaced Deep Blue)
+        '#00D2D3', // Bright Cyan (was Lime Green, swapped with Wants)
+        '#0984E3', // True Blue (Replaced Teal)
+        '#1E272E', // Dark Grey
+        '#808E9B'  // Light Grey
     ];
 
     const chartLabels = noData ? ['No Data'] : labels;
@@ -131,7 +130,8 @@ export function updateCategoryChart(categoriesMap) {
         catChart.data.labels = chartLabels;
         catChart.data.datasets[0].data = chartData;
         catChart.data.datasets[0].backgroundColor = bgColors;
-        catChart.data.datasets[0].borderColor = borderColors;
+        catChart.data.datasets[0].borderColor = '#161921';
+        catChart.data.datasets[0].borderWidth = 3;
         catChart.update();
         return;
     }
@@ -143,8 +143,8 @@ export function updateCategoryChart(categoriesMap) {
             datasets: [{
                 data: chartData,
                 backgroundColor: bgColors,
-                borderColor: borderColors,
-                borderWidth: 2,
+                borderColor: '#161921',
+                borderWidth: 3,
                 hoverOffset: 4
             }]
         },
@@ -253,3 +253,8 @@ export function updateBudgetHealthChart(income, savings, emergency, fixed, buffe
     });
 }
 
+export function resizeCharts() {
+    if (myChart) myChart.resize();
+    if (catChart) catChart.resize();
+    if (healthChart) healthChart.resize();
+}
