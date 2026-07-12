@@ -215,6 +215,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function loadProfile() {
         try {
             const response = await fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } });
+            if (response.status === 401 || response.status === 403) {
+                localStorage.removeItem('savvy_auth_token');
+                window.location.href = 'login.html';
+                return;
+            }
             if (response.ok) {
                 const user = await response.json();
                 state.income = parseFloat(user.monthly_budget) || 0;
@@ -776,7 +781,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (response.ok) {
                 await loadActiveTransactions();
             } else {
-                alert('Failed to save transaction.');
+                let errMsg = 'Unknown error';
+                try { const errData = await response.json(); errMsg = errData.error || errMsg; } catch(e) {}
+                alert('Failed to save transaction: ' + errMsg);
             }
         } catch(err) { console.error(err); }
     }

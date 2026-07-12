@@ -15,11 +15,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- Auth Check -->
-    <script>
-        if (!localStorage.getItem('savvy_auth_token')) {
-            window.location.href = 'login.html';
-        }
-    </script>
+    <script src="auth-check.js"></script>
 </head>
 <body>
     <div class="app-container">
@@ -103,6 +99,7 @@
                                         <option value="Needs">Needs</option>
                                         <option value="Wants">Wants</option>
                                         <option value="Miscellaneous">Miscellaneous</option>
+                                        <option value="Add Money">Add Money</option>
                                     </select>
                                 </div>
                                 <div style="display: flex; gap: 10px; margin-bottom: 15px;">

@@ -258,7 +258,7 @@ router.delete('/account', authenticate, async (req, res) => {
 router.post('/telegram-token', authenticate, async (req, res) => {
     try {
         const crypto = require('crypto');
-        const token = 'SAVVY-' + crypto.randomBytes(3).toString('hex').toUpperCase();
+        const token = 'SAVVY-' + crypto.randomBytes(6).toString('hex').toUpperCase();
         
         await db.query('UPDATE users SET linking_token = ? WHERE id = ?', [token, req.user.id]);
         res.json({ token, message: 'Linking token generated successfully' });
