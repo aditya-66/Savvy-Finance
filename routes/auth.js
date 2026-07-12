@@ -70,6 +70,9 @@ router.post('/register', async (req, res) => {
     if (!isValidString(name, 100) || !isValidString(email, 255) || !isValidString(password, 255)) {
         return res.status(400).json({ error: 'Invalid input data' });
     }
+    if (password.length < 8) {
+        return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+    }
 
     try {
         const [existing] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
@@ -77,7 +80,7 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({ error: 'Email already exists' });
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(password, 12);
         const otp = crypto.randomInt(100000, 999999).toString();
         const otpExpires = new Date(Date.now() + 10 * 60000); // 10 mins from now
 
@@ -223,7 +226,8 @@ router.post('/budget', authenticate, async (req, res) => {
     const pFixed = parseFloat(fixed_needs) || 0;
     const pMisc = parseFloat(misc_buffer) || 0;
 
-    if (pBudget < 0 || pSavings < 0 || pEmergency < 0 || pFixed < 0 || pMisc < 0 || pMisc > 100) {
+    if (isNaN(pBudget) || isNaN(pSavings) || isNaN(pEmergency) || isNaN(pFixed) || isNaN(pMisc) || 
+        pBudget < 0 || pSavings < 0 || pEmergency < 0 || pFixed < 0 || pMisc < 0 || pMisc > 100) {
         return res.status(400).json({ error: 'Invalid budget parameters' });
     }
 

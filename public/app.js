@@ -182,6 +182,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     document.getElementById('logout-btn').addEventListener('click', () => {
         localStorage.removeItem('savvy_auth_token');
+        localStorage.removeItem('savvy_user_name');
         window.location.href = 'login.html';
     });
     document.getElementById('nav-account-btn').addEventListener('click', () => {
@@ -217,6 +218,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const response = await fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } });
             if (response.status === 401 || response.status === 403) {
                 localStorage.removeItem('savvy_auth_token');
+                localStorage.removeItem('savvy_user_name');
                 window.location.href = 'login.html';
                 return;
             }
@@ -418,6 +420,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
                 if (res.ok) {
                     localStorage.removeItem('savvy_auth_token');
+                    localStorage.removeItem('savvy_user_name');
                     window.location.href = 'login.html';
                 }
             } catch (err) { console.error(err); }
